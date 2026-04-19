@@ -6,25 +6,27 @@
 import requests
 from typing import List, Dict, Any
 
-from src.utils.config import Config
 
 class HHApi:
     """Класс для получения данных с hh.ru."""
 
-    BASE_URL = 'https://api.hh.ru'
+    BASE_URL = "https://api.hh.ru"
+    HEADERS = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
 
-    # Список компаний (ID с hh.ru)
+    # Фиксированные ID компаний
     EMPLOYER_IDS = [
-        "1740",  # Яндекс
-        "78638",  # Т-Банк
-        "3529",  # Сбер
-        "1074173",  # Георг Полимер (производство, экструзия!) 🔥
-        "39305",  # Газпром Нефть (IT + нефтегаз)
-        "20465",  # ООО МАСТЕРФУД (IT для производства)
-        "4181",  # Банк ВТБ
-        "2748",  # Ростелеком (IT + связь)
-        "3127",  # Мегафон ПАО
-        "2180",  # Ozon
+        "1740",     # Яндекс
+        "78638",    # Т-Банк
+        "3529",     # Сбер
+        "1074173",  # Георг Полимер
+        "39305",    # Газпром Нефть
+        "20465",    # ООО МАСТЕРФУД
+        "4181",     # Банк ВТБ
+        "2748",     # Ростелеком
+        "3127",     # Мегафон
+        "2180",     # Ozon
     ]
 
     def get_employers(self) -> List[Dict[str, Any]]:
@@ -33,7 +35,7 @@ class HHApi:
         for emp_id in self.EMPLOYER_IDS:
             url = f"{self.BASE_URL}/employers/{emp_id}"
             try:
-                response = requests.get(url)
+                response = requests.get(url, headers=self.HEADERS)
                 response.raise_for_status()
                 employer_data = response.json()
                 employers.append({
@@ -53,11 +55,11 @@ class HHApi:
         url = f"{self.BASE_URL}/vacancies"
         params = {
             "employer_id": employer_id,
-            "per_page": 20,  # не более 20 вакансий на компанию
-            "only_with_salary": True  # только с зарплатой
+            "per_page": 20,
+            "only_with_salary": True
         }
         try:
-            response = requests.get(url, params=params)
+            response = requests.get(url, headers=self.HEADERS, params=params)
             response.raise_for_status()
             data = response.json()
             for item in data.get("items", []):
