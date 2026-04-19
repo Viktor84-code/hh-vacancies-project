@@ -1,16 +1,45 @@
-# This is a sample Python script.
+"""
+Точка входа в программу.
+Получает данные о компаниях и вакансиях с hh.ru,
+сохраняет в PostgreSQL и предоставляет интерфейс для работы.
+"""
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+# from src.api.hh_api import HHApi
+# from src.db.db_creator import DBCreator
+# from src.db.db_manager import DBManager
+from src.utils.config import Config
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+def main():
+    """Основная функция программы."""
+    print("🚀 Запуск курсовой работы по БД")
+
+    # 1. Получаем данные с hh.ru
+    print("\n1. Получение данных о компаниях и вакансиях с hh.ru...")
+    # TODO: реализовать HHApi
+
+    # 2. Создаём БД и таблицы
+    print("\n2. Создание базы данных и таблиц...")
+    # TODO: реализовать DBCreator
+
+    # 3. Заполняем таблицы данными
+    print("\n3. Заполнение таблиц...")
+    # TODO: загрузить данные в БД
+
+    # 4. Создаём экземпляр DBManager для работы с БД
+    db_manager = DBManager(Config.get_dsn())
+
+    # 5. Интерфейс с пользователем
+    print("\n4. Доступные команды:")
+    print("1 - Компании и количество вакансий")
+    print("2 - Все вакансии")
+    print("3 - Средняя зарплата")
+    print("4 - Вакансии с зарплатой выше средней")
+    print("5 - Поиск по ключевому слову")
+    print("0 - Выход")
+
+    # TODO: реализовать цикл обработки команд
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+if __name__ == "__main__":
+    main()
