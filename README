@@ -1,0 +1,62 @@
+# Курсовая работа: Парсинг вакансий с hh.ru
+
+## Описание проекта
+Программа получает данные о компаниях и вакансиях из JSON-файла (выгрузка Skypro), сохраняет их в базу данных PostgreSQL и предоставляет интерфейс для работы с этими данными.
+
+## Технологии
+- Python 3.13
+- PostgreSQL 17
+- psycopg2-binary
+- pytest + pytest-cov
+
+## Установка и запуск
+
+### 1. Клонировать репозиторий
+```bash
+git clone git@github.com:Viktor84-code/hh-vacancies-project.git
+cd hh-vacancies-project
+2. Создать виртуальное окружение и установить зависимости
+bash
+python -m venv .venv
+.venv\Scripts\activate      # Windows
+pip install -r requirements.txt
+3. Настроить базу данных PostgreSQL
+Установите PostgreSQL (пароль: postgres, порт: 5432)
+
+Создайте базу данных: hh_vacancies
+
+Выполните SQL (или запустите main.py):
+> **Примечание:** Программа создаёт таблицы автоматически.
+> Ручное создание требуется только при работе напрямую через pgAdmin.
+sql
+CREATE TABLE IF NOT EXISTS companies (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    url TEXT,
+    description TEXT
+);
+
+CREATE TABLE IF NOT EXISTS vacancies (
+    id INTEGER PRIMARY KEY,
+    company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    url TEXT,
+    salary_from INTEGER,
+    salary_to INTEGER,
+    salary_currency VARCHAR(10)
+);
+4. Запустить программу
+bash
+python main.py
+Список компаний
+Yandex, Ozon Tech, Sber, Tinkoff, VK (из JSON)
+
+Георг Полимер, Газпром Нефть, ООО МАСТЕРФУД, ВТБ, Ростелеком, Мегафон, Ozon (добавлены вручную)
+
+Методы DBManager
+Метод	Описание
+get_companies_and_vacancies_count()	список компаний и количество вакансий
+get_all_vacancies()	все вакансии с названием компании, зарплатой и ссылкой
+get_avg_salary()	средняя зарплата по вакансиям
+get_vacancies_with_higher_salary()	вакансии с зарплатой выше средней
+get_vacancies_with_keyword(word)	вакансии по ключевому слову
