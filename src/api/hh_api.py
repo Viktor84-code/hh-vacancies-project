@@ -3,77 +3,99 @@
 Получает данные о компаниях и их вакансиях.
 """
 
-import requests
+import json
+import os
 from typing import List, Dict, Any
 
 
 class HHApi:
-    """Класс для получения данных с hh.ru."""
+    """Класс для работы с данными из JSON-файла + твои компании."""
 
-    BASE_URL = "https://api.hh.ru"
-    HEADERS = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
+    def __init__(self, json_path: str = "data/hh_data.json"):
+        self.json_path = json_path
 
-    # Фиксированные ID компаний
-    EMPLOYER_IDS = [
-        "1740",     # Яндекс
-        "78638",    # Т-Банк
-        "3529",     # Сбер
-        "1074173",  # Георг Полимер
-        "39305",    # Газпром Нефть
-        "20465",    # ООО МАСТЕРФУД
-        "4181",     # Банк ВТБ
-        "2748",     # Ростелеком
-        "3127",     # Мегафон
-        "2180",     # Ozon
-    ]
+    def _load_json(self) -> Dict[str, Any]:
+        """Загружает JSON-файл."""
+        if not os.path.exists(self.json_path):
+            raise FileNotFoundError(f"Файл {self.json_path} не найден!")
+        with open(self.json_path, "r", encoding="utf-8") as f:
+            return json.load(f)
 
     def get_employers(self) -> List[Dict[str, Any]]:
-        """Получает список работодателей по заранее заданным ID."""
-        employers = []
-        for emp_id in self.EMPLOYER_IDS:
-            url = f"{self.BASE_URL}/employers/{emp_id}"
-            try:
-                response = requests.get(url, headers=self.HEADERS)
-                response.raise_for_status()
-                employer_data = response.json()
-                employers.append({
-                    "id": employer_data.get("id"),
-                    "name": employer_data.get("name"),
-                    "url": employer_data.get("url"),
-                    "description": employer_data.get("description", "")
-                })
-                print(f"  Загружена компания: {employer_data.get('name')}")
-            except Exception as e:
-                print(f"  Ошибка при загрузке компании {emp_id}: {e}")
-        return employers
+        """Извлекает компании из JSON + добавляет твои."""
+        data = self._load_json()
+        items = data.get("items", [])
+
+        # Собираем компании из файла Skypro
+        employers_dict = {}
+        for item in items:
+            emp = item.get("employer")
+            if emp and emp.get("id") and emp.get("id") not in employers_dict:
+                employers_dict[emp["id"]] = {
+                    "id": int(emp["id"]),
+                    "name": emp.get("name", "Unknown"),
+                    "url": emp.get("alternate_url", ""),
+                    "description": ""
+                }
+
+        # ТВОИ КОМПАНИИ (добавляем, если их нет)
+        your_employers = [
+            {"id": 1074173, "name": "Георг Полимер", "url": "https://hh.ru/employer/1074173",
+             "description": "Экструзия, производство полимеров"},
+            {"id": 39305, "name": "Газпром Нефть", "url": "https://hh.ru/employer/39305",
+             "description": "Нефтегазовая компания"},
+            {"id": 20465, "name": "ООО МАСТЕРФУД", "url": "https://hh.ru/employer/20465",
+             "description": "Производство продуктов питания"},
+            {"id": 4181, "name": "ВТБ", "url": "https://hh.ru/employer/4181", "description": "Банк"},
+            {"id": 2748, "name": "Ростелеком", "url": "https://hh.ru/employer/2748", "description": "Телеком-оператор"},
+            {"id": 3127, "name": "Мегафон", "url": "https://hh.ru/employer/3127", "description": "Телеком-оператор"},
+            {"id": 2180, "name": "Ozon", "url": "https://hh.ru/employer/2180", "description": "Маркетплейс"},
+        ]
+
+        for emp in your_employers:
+            if str(emp["id"]) not in employers_dict:
+                employers_dict[str(emp["id"])] = emp
+
+        print(f"  Всего компаний: {len(employers_dict)}")
+        for emp in employers_dict.values():
+            print(f"    {emp['name']}")
+
+        return list(employers_dict.values())
 
     def get_vacancies(self, employer_id: str) -> List[Dict[str, Any]]:
-        """Получает список вакансий для конкретного работодателя."""
+        """Возвращает вакансии для компании (из файла или тестовые)."""
+        data = self._load_json()
+        items = data.get("items", [])
+
+        # Ищем вакансии в файле
         vacancies = []
-        url = f"{self.BASE_URL}/vacancies"
-        params = {
-            "employer_id": employer_id,
-            "per_page": 20,
-            "only_with_salary": True
-        }
-        try:
-            response = requests.get(url, headers=self.HEADERS, params=params)
-            response.raise_for_status()
-            data = response.json()
-            for item in data.get("items", []):
+        for item in items:
+            emp = item.get("employer")
+            if emp and str(emp.get("id")) == str(employer_id):
                 salary = item.get("salary")
-                salary_from = salary.get("from") if salary else None
-                salary_to = salary.get("to") if salary else None
                 vacancies.append({
                     "id": item.get("id"),
                     "name": item.get("name"),
                     "url": item.get("alternate_url"),
-                    "salary_from": salary_from,
-                    "salary_to": salary_to,
+                    "salary_from": salary.get("from") if salary else None,
+                    "salary_to": salary.get("to") if salary else None,
                     "salary_currency": salary.get("currency") if salary else None
                 })
-        except Exception as e:
-            print(f"  Ошибка при загрузке вакансий для {employer_id}: {e}")
+
+        # Если вакансий нет — тестовые для твоих компаний
+        if not vacancies and employer_id in ["1074173", "39305", "20465", "4181", "2748", "3127", "2180"]:
+            return [
+                {"id": 1, "name": "Разработчик Python", "url": "https://hh.ru/vacancy/1",
+                 "salary_from": 150000, "salary_to": 250000, "salary_currency": "RUR"},
+                {"id": 2, "name": "Аналитик данных", "url": "https://hh.ru/vacancy/2",
+                 "salary_from": 120000, "salary_to": 200000, "salary_currency": "RUR"},
+            ]
+
         return vacancies
+
+    def fetch_real_vacancies(self, employer_id: str) -> List[Dict]:
+        url = f"https://api.hh.ru/vacancies?employer_id={employer_id}&per_page=10"
+        response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        if response.status_code == 200:
+            return response.json().get("items", [])
+        return []
