@@ -3,10 +3,12 @@
 """
 
 import psycopg2
+
 from src.utils.config import Config
 
 
 class DBCreator:
+    """Класс для создания базы данных и таблиц."""
     def __init__(self):
         self.conn = None
         self.cur = None
@@ -20,13 +22,15 @@ class DBCreator:
                 user=Config.DB_USER,
                 password=Config.DB_PASSWORD,
                 host=Config.DB_HOST,
-                port=Config.DB_PORT
+                port=Config.DB_PORT,
             )
             conn_admin.autocommit = True
             cur_admin = conn_admin.cursor()
 
             # Проверяем, существует ли база
-            cur_admin.execute(f"SELECT 1 FROM pg_database WHERE datname = '{Config.DB_NAME}'")
+            cur_admin.execute(
+                f"SELECT 1 FROM pg_database WHERE datname = '{Config.DB_NAME}'"
+            )
             exists = cur_admin.fetchone()
 
             if not exists:
@@ -48,7 +52,7 @@ class DBCreator:
                 user=Config.DB_USER,
                 password=Config.DB_PASSWORD,
                 host=Config.DB_HOST,
-                port=Config.DB_PORT
+                port=Config.DB_PORT,
             )
             self.cur = self.conn.cursor()
 
@@ -78,7 +82,8 @@ class DBCreator:
         except Exception as e:
             print(f"  Ошибка при создании таблиц: {e}")
 
-    def close(self):
+    def close(self) -> None:
+        """Закрывает соединение с БД."""
         if self.cur:
             self.cur.close()
         if self.conn:

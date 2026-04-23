@@ -35,6 +35,7 @@ def main():
     cur = None
     try:
         import psycopg2
+
         conn = psycopg2.connect(Config.get_dsn())
         cur = conn.cursor()
 
@@ -44,21 +45,34 @@ def main():
 
         # Заполняем компании
         for emp in employers:
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO companies (id, name, url, description)
                 VALUES (%s, %s, %s, %s)
                 ON CONFLICT (id) DO NOTHING
-            """, (emp["id"], emp["name"], emp["url"], emp["description"]))
+            """,
+                (emp["id"], emp["name"], emp["url"], emp["description"]),
+            )
 
             # Заполняем вакансии
             vacancies = hh.get_vacancies(emp["id"])
             for vac in vacancies:
-                cur.execute("""
+                cur.execute(
+                    """
                     INSERT INTO vacancies (id, company_id, name, url, salary_from, salary_to, salary_currency)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (id) DO NOTHING
-                """, (vac["id"], emp["id"], vac["name"], vac["url"],
-                      vac["salary_from"], vac["salary_to"], vac["salary_currency"]))
+                """,
+                    (
+                        vac["id"],
+                        emp["id"],
+                        vac["name"],
+                        vac["url"],
+                        vac["salary_from"],
+                        vac["salary_to"],
+                        vac["salary_currency"],
+                    ),
+                )
 
         conn.commit()
         print("  Данные успешно загружены в БД")
@@ -100,7 +114,9 @@ def main():
             results = db_manager.get_all_vacancies()
             print("\nВсе вакансии:")
             for row in results:
-                print(f"  {row[0]} - {row[1]} (зп: {row[2]} - {row[3]}, ссылка: {row[4]})")
+                print(
+                    f"  {row[0]} - {row[1]} (зп: {row[2]} - {row[3]}, ссылка: {row[4]})"
+                )
         elif choice == "3":
             avg = db_manager.get_avg_salary()
             print(f"\nСредняя зарплата по всем вакансиям: {avg:.2f}")

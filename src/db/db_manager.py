@@ -1,16 +1,18 @@
-"""
-Модуль с классом DBManager для работы с данными в БД.
-"""
+"""Модуль для работы с данными в PostgreSQL."""
+
+from __future__ import annotations
+
+from typing import List, Tuple
 
 import psycopg2
-from typing import List, Tuple, Any
+
 from src.utils.config import Config
 
 
 class DBManager:
     """Класс для работы с данными в PostgreSQL."""
 
-    def __init__(self, dsn: str = None):
+    def __init__(self, dsn: str | None = None):
         """Подключается к БД."""
         # Временно используем параметры вместо DSN из-за бага psycopg2 в Windows
         if dsn:
@@ -24,7 +26,7 @@ class DBManager:
                     user=Config.DB_USER,
                     password=Config.DB_PASSWORD,
                     host=Config.DB_HOST,
-                    port=Config.DB_PORT
+                    port=Config.DB_PORT,
                 )
         else:
             # Если DSN не передан, используем параметры
@@ -33,7 +35,7 @@ class DBManager:
                 user=Config.DB_USER,
                 password=Config.DB_PASSWORD,
                 host=Config.DB_HOST,
-                port=Config.DB_PORT
+                port=Config.DB_PORT,
             )
         self.cur = self.conn.cursor()
 
@@ -70,26 +72,32 @@ class DBManager:
     def get_vacancies_with_higher_salary(self) -> List[Tuple[str, str, float, str]]:
         """Возвращает список вакансий с зарплатой выше средней."""
         avg_salary = self.get_avg_salary()
-        self.cur.execute("""
+        self.cur.execute(
+            """
             SELECT c.name, v.name, (v.salary_from + v.salary_to) / 2 as avg_salary, v.url
             FROM vacancies v
             JOIN companies c ON v.company_id = c.id
             WHERE (v.salary_from + v.salary_to) / 2 > %s
             ORDER BY avg_salary DESC
-        """, (avg_salary,))
+        """,
+            (avg_salary,),
+        )
         return self.cur.fetchall()
 
     def get_vacancies_with_keyword(self, keyword: str) -> List[Tuple[str, str, str]]:
         """Возвращает список вакансий, в названии которых есть ключевое слово."""
-        self.cur.execute("""
+        self.cur.execute(
+            """
             SELECT c.name, v.name, v.url
             FROM vacancies v
             JOIN companies c ON v.company_id = c.id
             WHERE v.name ILIKE %s
-        """, (f"%{keyword}%",))
+        """,
+            (f"%{keyword}%",),
+        )
         return self.cur.fetchall()
 
-    def close(self):
+    def close(self) -> None:
         """Закрывает соединение с БД."""
         self.cur.close()
         self.conn.close()

@@ -1,5 +1,6 @@
-import pytest
 import psycopg2
+import pytest
+
 from src.db.db_creator import DBCreator
 from src.utils.config import Config
 
@@ -13,7 +14,7 @@ def db_creator():
         user=Config.DB_USER,
         password=Config.DB_PASSWORD,
         host=Config.DB_HOST,
-        port=Config.DB_PORT
+        port=Config.DB_PORT,
     )
     conn.autocommit = True
     cur = conn.cursor()
@@ -40,7 +41,7 @@ def db_creator():
         user=Config.DB_USER,
         password=Config.DB_PASSWORD,
         host=Config.DB_HOST,
-        port=Config.DB_PORT
+        port=Config.DB_PORT,
     )
     conn.autocommit = True
     cur = conn.cursor()
@@ -58,7 +59,7 @@ def test_create_database(db_creator):
         user=Config.DB_USER,
         password=Config.DB_PASSWORD,
         host=Config.DB_HOST,
-        port=Config.DB_PORT
+        port=Config.DB_PORT,
     )
     cur = conn.cursor()
     cur.execute("SELECT 1 FROM pg_database WHERE datname = 'test_hh_vacancies'")
@@ -78,18 +79,18 @@ def test_create_tables(db_creator):
         user=Config.DB_USER,
         password=Config.DB_PASSWORD,
         host=Config.DB_HOST,
-        port=Config.DB_PORT
+        port=Config.DB_PORT,
     )
     cur = conn.cursor()
     cur.execute("""
-        SELECT table_name 
-        FROM information_schema.tables 
-        WHERE table_schema = 'public' 
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
         AND table_name IN ('companies', 'vacancies')
     """)
     tables = {row[0] for row in cur.fetchall()}
-    assert 'companies' in tables
-    assert 'vacancies' in tables
+    assert "companies" in tables
+    assert "vacancies" in tables
     cur.close()
     conn.close()
 
@@ -110,14 +111,14 @@ def test_create_tables_already_exists(db_creator):
 def test_create_database_handles_exception(monkeypatch):
     """Тест: при ошибке подключения исключение перехватывается, программа не падает."""
     import psycopg2
+
     from src.db.db_creator import DBCreator
-    from src.utils.config import Config
 
     def mock_connect_fail(*args, **kwargs):
         raise psycopg2.OperationalError("Fake connection error")
 
     # Подменяем psycopg2.connect на фальшивый, который всегда падает
-    monkeypatch.setattr(psycopg2, 'connect', mock_connect_fail)
+    monkeypatch.setattr(psycopg2, "connect", mock_connect_fail)
 
     creator = DBCreator()
     # Эти методы не должны выбросить исключение (оно ловится внутри)

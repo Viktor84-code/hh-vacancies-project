@@ -5,7 +5,8 @@
 
 import json
 import os
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+import requests
 
 
 class HHApi:
@@ -35,21 +36,53 @@ class HHApi:
                     "id": int(emp["id"]),
                     "name": emp.get("name", "Unknown"),
                     "url": emp.get("alternate_url", ""),
-                    "description": ""
+                    "description": "",
                 }
 
         # ТВОИ КОМПАНИИ (добавляем, если их нет)
         your_employers = [
-            {"id": 1074173, "name": "Георг Полимер", "url": "https://hh.ru/employer/1074173",
-             "description": "Экструзия, производство полимеров"},
-            {"id": 39305, "name": "Газпром Нефть", "url": "https://hh.ru/employer/39305",
-             "description": "Нефтегазовая компания"},
-            {"id": 20465, "name": "ООО МАСТЕРФУД", "url": "https://hh.ru/employer/20465",
-             "description": "Производство продуктов питания"},
-            {"id": 4181, "name": "ВТБ", "url": "https://hh.ru/employer/4181", "description": "Банк"},
-            {"id": 2748, "name": "Ростелеком", "url": "https://hh.ru/employer/2748", "description": "Телеком-оператор"},
-            {"id": 3127, "name": "Мегафон", "url": "https://hh.ru/employer/3127", "description": "Телеком-оператор"},
-            {"id": 2180, "name": "Ozon", "url": "https://hh.ru/employer/2180", "description": "Маркетплейс"},
+            {
+                "id": 1074173,
+                "name": "Георг Полимер",
+                "url": "https://hh.ru/employer/1074173",
+                "description": "Экструзия, производство полимеров",
+            },
+            {
+                "id": 39305,
+                "name": "Газпром Нефть",
+                "url": "https://hh.ru/employer/39305",
+                "description": "Нефтегазовая компания",
+            },
+            {
+                "id": 20465,
+                "name": "ООО МАСТЕРФУД",
+                "url": "https://hh.ru/employer/20465",
+                "description": "Производство продуктов питания",
+            },
+            {
+                "id": 4181,
+                "name": "ВТБ",
+                "url": "https://hh.ru/employer/4181",
+                "description": "Банк",
+            },
+            {
+                "id": 2748,
+                "name": "Ростелеком",
+                "url": "https://hh.ru/employer/2748",
+                "description": "Телеком-оператор",
+            },
+            {
+                "id": 3127,
+                "name": "Мегафон",
+                "url": "https://hh.ru/employer/3127",
+                "description": "Телеком-оператор",
+            },
+            {
+                "id": 2180,
+                "name": "Ozon",
+                "url": "https://hh.ru/employer/2180",
+                "description": "Маркетплейс",
+            },
         ]
 
         for emp in your_employers:
@@ -73,27 +106,50 @@ class HHApi:
             emp = item.get("employer")
             if emp and str(emp.get("id")) == str(employer_id):
                 salary = item.get("salary")
-                vacancies.append({
-                    "id": item.get("id"),
-                    "name": item.get("name"),
-                    "url": item.get("alternate_url"),
-                    "salary_from": salary.get("from") if salary else None,
-                    "salary_to": salary.get("to") if salary else None,
-                    "salary_currency": salary.get("currency") if salary else None
-                })
+                vacancies.append(
+                    {
+                        "id": item.get("id"),
+                        "name": item.get("name"),
+                        "url": item.get("alternate_url"),
+                        "salary_from": salary.get("from") if salary else None,
+                        "salary_to": salary.get("to") if salary else None,
+                        "salary_currency": salary.get("currency") if salary else None,
+                    }
+                )
 
         # Если вакансий нет — тестовые для твоих компаний
-        if not vacancies and employer_id in ["1074173", "39305", "20465", "4181", "2748", "3127", "2180"]:
+        if not vacancies and employer_id in [
+            "1074173",
+            "39305",
+            "20465",
+            "4181",
+            "2748",
+            "3127",
+            "2180",
+        ]:
             return [
-                {"id": 1, "name": "Разработчик Python", "url": "https://hh.ru/vacancy/1",
-                 "salary_from": 150000, "salary_to": 250000, "salary_currency": "RUR"},
-                {"id": 2, "name": "Аналитик данных", "url": "https://hh.ru/vacancy/2",
-                 "salary_from": 120000, "salary_to": 200000, "salary_currency": "RUR"},
+                {
+                    "id": 1,
+                    "name": "Разработчик Python",
+                    "url": "https://hh.ru/vacancy/1",
+                    "salary_from": 150000,
+                    "salary_to": 250000,
+                    "salary_currency": "RUR",
+                },
+                {
+                    "id": 2,
+                    "name": "Аналитик данных",
+                    "url": "https://hh.ru/vacancy/2",
+                    "salary_from": 120000,
+                    "salary_to": 200000,
+                    "salary_currency": "RUR",
+                },
             ]
 
         return vacancies
 
     def fetch_real_vacancies(self, employer_id: str) -> List[Dict]:
+        """Пытается получить реальные вакансии из API."""
         url = f"https://api.hh.ru/vacancies?employer_id={employer_id}&per_page=10"
         response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
         if response.status_code == 200:

@@ -60,3 +60,30 @@ get_all_vacancies()	все вакансии с названием компани
 get_avg_salary()	средняя зарплата по вакансиям
 get_vacancies_with_higher_salary()	вакансии с зарплатой выше средней
 get_vacancies_with_keyword(word)	вакансии по ключевому слову
+
+## Тестирование и качество кода
+
+### Запуск тестов
+```bash
+pytest
+Проверка покрытия
+bash
+pytest --cov=src --cov-report=term
+Проверка стиля (PEP8)
+bash
+flake8 src/ tests/ main.py
+Автоформатирование
+bash
+black src/ tests/ main.py
+isort src/ tests/ main.py
+Проверка типов
+bash
+mypy src/
+Результаты
+Покрытие кода: 94% (выше требований ТЗ)
+
+Все тесты DBManager и db_creator проходят
+
+Код соответствует PEP8
+
+Документированы все классы и публичные методы
